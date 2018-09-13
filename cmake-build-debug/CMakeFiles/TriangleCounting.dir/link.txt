@@ -1,0 +1,1 @@
+/usr/bin/c++   -fopenmp -O0 -g    CMakeFiles/TriangleCounting.dir/main.cpp.o  -o TriangleCounting 
