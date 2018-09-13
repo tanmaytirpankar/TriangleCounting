@@ -62,24 +62,32 @@ public:
     }
     bool operator >(Points<T> p2)
     {
-        if(choice == 1){
-            if(x>p2.x)
-                return true;
-            else
-                return false;
-        }
-        else if(choice == 2){
-            if(y>p2.y)
-                return true;
-            else
-                return false;
-        }
-        else if(choice == 3){
-            if(z>p2.z)
-                return true;
-            else
-                return false;
-        }
+//        if(choice == 1){
+//            if(x>p2.x)
+//                return true;
+//            else
+//                return false;
+//        }
+//        else if(choice == 2){
+//            if(y>p2.y)
+//                return true;
+//            else
+//                return false;
+//        }
+//        else if(choice == 3){
+//            if(z>p2.z)
+//                return true;
+//            else
+//                return false;
+//        }
+        if(x>p2.x)
+            return true;
+        else if(x<p2.x)
+            return false;
+        else if(y>p2.y)
+            return true;
+        else
+            return false;
     }
 };
 

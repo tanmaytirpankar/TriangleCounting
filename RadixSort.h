@@ -22,21 +22,22 @@
 #include <algorithm>
 using namespace std;
 template <class T>
-class RadixSort{
-    vector <Points<T>> arr,arr1;
-    vector <T> num_count;
+class RadixSort {
+    vector<Points<T>> arr, arr1;
+    vector<Points<T>> count;
+    vector<T> num_count;
     int num_threads;
     unsigned int n;
     int word_size;
     int lvls;
 public:
-    RadixSort(vector<Points<T>> *inparr, unsigned int n,int num,int word_size)
-    {
-        this->n=n;
-        this->num_threads=num;
-        this->word_size=word_size;
-        arr=arr1=*inparr;
-        lvls=(sizeof(arr[0].getX())*8)/word_size+1;
+    RadixSort(vector<Points<T>> *inparr, unsigned int n, int num, int word_size) {
+        this->n = n;
+        this->num_threads = num;
+        this->word_size = word_size;
+        vector<Points<T>> count(0);
+        arr = arr1 = *inparr;
+        lvls = (sizeof(arr[0].getX()) * 8) / word_size + 1;
 //        print();
 //        cout<<endl;
         print1();
@@ -49,74 +50,69 @@ public:
         }*/
     }
 
-    void print()
-    {
+    void print() {
         for (int i = 0; i < n; i++) {
             int num_length = sizeof(arr[0].getX()) * 8;
             T x = arr[i].getX();
             T y = arr[i].getY();
             T z = arr[i].getZ();
-            cout<<"("<<arr[i].getX()<<","<<arr[i].getY()<<","<<arr[i].getZ()<<"),";
+            cout << "(" << arr[i].getX() << "," << arr[i].getY() << "," << arr[i].getZ() << "),";
             for (int j = 0; j < num_length; j++) {
-                x=arr[i].getX();
-                x=x>>num_length-j-1;
-                cout<<x%2;
+                x = arr[i].getX();
+                x = x >> num_length - j - 1;
+                cout << x % 2;
             }
-            cout<<",";
+            cout << ",";
             for (int j = 0; j < num_length; j++) {
-                y=arr[i].getY();
-                y=y>>num_length-j-1;
-                cout<<y%2;
+                y = arr[i].getY();
+                y = y >> num_length - j - 1;
+                cout << y % 2;
             }
-            cout<<",";
+            cout << ",";
             for (int j = 0; j < num_length; j++) {
-                z=arr[i].getZ();
-                z=z>>num_length-j-1;
-                cout<<z%2;
+                z = arr[i].getZ();
+                z = z >> num_length - j - 1;
+                cout << z % 2;
             }
-            cout<<endl;
+            cout << endl;
         }
     }
-    void print1()
-    {
+
+    void print1() {
         for (int i = 0; i < n; i++) {
             cout << "(" << arr[i].getX() << "," << arr[i].getY() << "," << arr[i].getZ() << "),";
         }
-        cout<<endl;
+        cout << endl;
     }
-    void Sort(unsigned long first, unsigned long last, int choice1, int level)
-    {
-        if(level == lvls)
-        {
-            for (int i = 0; i < n; ++i) {
+
+    void Sort(unsigned long first, unsigned long last, int choice1, int level) {
+        if (level == lvls) {
+            for (int i = first; i <= last; i++) {
                 arr[i].choice = arr1[i].choice = choice1;
             }
         }
-        int num_elements=last-first+1;
-        if(num_elements<=20 || level<1)
-        {
-            if(level % 2 == 1)
-            {
+        int num_elements = last - first + 1;
+        if (num_elements <= 20 || level < 1) {
+            if (level % 2 == 1) {
                 sort(&arr1[first], &arr1[last + 1]);
-                for (int i = first; i <=last ; i++) {
+                for (int i = first; i <= last; i++) {
                     arr[i] = arr1[i];
                 }
-            } else
-            {
+            } else {
                 sort(&arr[first], &arr[last + 1]);
-                for (int i = first; i <=last ; i++) {
+                for (int i = first; i <= last; i++) {
                     arr1[i] = arr[i];
                 }
             }
-            return ;
+            return;
         }
-        int buckets=int(pow(2,word_size));
-        int choice=0;
+        int buckets = int(pow(2, word_size));
+        int choice = 0;
         vector<vector<unsigned int>> count(num_threads);
         vector<vector<unsigned int>> position(num_threads);
         for (int l = 0; l < num_threads; l++) {
             count[l] = vector<unsigned int>(buckets);
-            position[l]=vector<unsigned int>(buckets);
+            position[l] = vector<unsigned int>(buckets);
         }
 //        if(num_elements<=1 || level<1)
 //        {
@@ -128,108 +124,100 @@ public:
         chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 #pragma omp parallel
         for (int j = 0; j < buckets; j++) {
-            position1[j]=0;
-            count[omp_get_thread_num()][j]=0;
-            position[omp_get_thread_num()][j]=0;
+            position1[j] = 0;
+            count[omp_get_thread_num()][j] = 0;
+            position[omp_get_thread_num()][j] = 0;
         }
         chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
+        auto duration = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 
         //cout <<"The time taken for initialization is "<<duration <<" microseconds"<<endl;
         t1 = chrono::high_resolution_clock::now();
-        int remainder= (sizeof(arr[0].getX())*8)%word_size;
-        int shift=((level-1)*word_size)-(word_size-remainder);
-        int mask=int(pow(2,word_size)-1);
+        int remainder = (sizeof(arr[0].getX()) * 8) % word_size;
+        int shift = ((level - 1) * word_size) - (word_size - remainder);
+        int mask = int(pow(2, word_size) - 1);
 //        cout<<"first: "<<first<<" last: "<<last<<" sizeof(count): "<<count.size()<<" sizeof(count[0])"<<count[0].size()<<endl;
-        if(level%2==1) {
-            if(choice1 == 1)
+        if (level % 2 == 1) {
+            if (choice1 == 1)
                 choice = 1;
-            else if(choice1 == 2)
+            else if (choice1 == 2)
                 choice = 2;
-            else if(choice1 == 3)
+            else if (choice1 == 3)
                 choice = 3;
-        }
-        else if(level%2==0){
-            if(choice1 == 1)
+        } else if (level % 2 == 0) {
+            if (choice1 == 1)
                 choice = 4;
-            else if(choice1 == 2)
+            else if (choice1 == 2)
                 choice = 5;
-            else if(choice1 == 3)
+            else if (choice1 == 3)
                 choice = 6;
         }
 
 
-        switch(choice)
-        {
+        switch (choice) {
             case 1:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++)
-                {
+                for (int i = first; i <= last; i++) {
                     T x;
-                    x=arr1[i].getX();
-                    if(level>1)
-                        x=x>>shift;
-                    x=x&mask;
+                    x = arr1[i].getX();
+                    if (level > 1)
+                        x = x >> shift;
+                    x = x & mask;
                     count[omp_get_thread_num()][x]++;
                 }
                 break;
             case 2:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++)
-                {
+                for (int i = first; i <= last; i++) {
                     T x;
-                    x=arr1[i].getY();
-                    if(level>1)
-                        x=x>>shift;
-                    x=x&mask;
+                    x = arr1[i].getY();
+                    if (level > 1)
+                        x = x >> shift;
+                    x = x & mask;
                     count[omp_get_thread_num()][x]++;
                 }
                 break;
             case 3:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++)
-                {
+                for (int i = first; i <= last; i++) {
                     T x;
-                    x=arr1[i].getZ();
-                    if(level>1)
-                        x=x>>shift;
-                    x=x&mask;
+                    x = arr1[i].getZ();
+                    if (level > 1)
+                        x = x >> shift;
+                    x = x & mask;
                     count[omp_get_thread_num()][x]++;
                 }
                 break;
             case 4:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++)
-                {
+                for (int i = first; i <= last; i++) {
                     T x;
-                    x=arr[i].getX();
-                    if(level>1)
-                        x=x>>shift;
-                    x=x&mask;
+                    x = arr[i].getX();
+                    if (level > 1)
+                        x = x >> shift;
+                    x = x & mask;
                     count[omp_get_thread_num()][x]++;
                 }
                 break;
             case 5:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++)
-                {
+                for (int i = first; i <= last; i++) {
                     T x;
-                    x=arr[i].getY();
-                    if(level>1)
-                        x=x>>shift;
-                    x=x&mask;
+                    x = arr[i].getY();
+                    if (level > 1)
+                        x = x >> shift;
+                    x = x & mask;
                     count[omp_get_thread_num()][x]++;
                 }
                 break;
             case 6:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++)
-                {
+                for (int i = first; i <= last; i++) {
                     T x;
-                    x=arr[i].getZ();
-                    if(level>1)
-                        x=x>>shift;
-                    x=x&mask;
+                    x = arr[i].getZ();
+                    if (level > 1)
+                        x = x >> shift;
+                    x = x & mask;
                     count[omp_get_thread_num()][x]++;
                 }
                 break;
@@ -239,7 +227,7 @@ public:
         }
         //cout<<endl<<"Shift is "<<shift<<endl;
         t2 = chrono::high_resolution_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
+        duration = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 
         //cout<<"The time taken for calculating counts is "<<duration <<" microseconds"<<endl;
 //        cout<<"Values in count:"<<endl;
@@ -262,18 +250,17 @@ public:
 //            prev_buc=position[num_threads-1][buc]+count[num_threads-1][buc];
 //        }
 
-        position1[0]=position[0][0]=first;
+        position1[0] = position[0][0] = first;
         for (int buc = 0; buc < buckets; buc++) {
             for (int tid = 1; tid < num_threads; tid++) {
-                if(tid==0&&buc==0)
-                {}
-                else
-                {
-                    position[tid][buc]=position[tid-1][buc]+count[tid-1][buc];
+                if (tid == 0 && buc == 0) {}
+                else {
+                    position[tid][buc] = position[tid - 1][buc] + count[tid - 1][buc];
                 }
             }
-            if(buc<buckets-1)
-                position1[buc+1]=position[0][buc+1]=position[num_threads-1][buc]+count[num_threads-1][buc];
+            if (buc < buckets - 1)
+                position1[buc + 1] = position[0][buc + 1] =
+                        position[num_threads - 1][buc] + count[num_threads - 1][buc];
         }
 //        cout<<"Positions in position at depth "<<level<<" is:"<<endl;
 //        for(int i = 0; i < num_threads; i++){
@@ -283,7 +270,7 @@ public:
 //            cout<<endl;
 //        }
 
-        switch(choice) {
+        switch (choice) {
             case 1:
 #pragma omp parallel for
                 for (int i = first; i <= last; i++) {
@@ -362,48 +349,54 @@ public:
 //        temp.clear();
 //        temp.shrink_to_fit();
         t2 = chrono::high_resolution_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
+        duration = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 
         //cout<<"The time taken for final sorting is "<<duration <<" microseconds"<<endl;
 
         //cout<<"Recursion number "<<level<<endl;
         //print();
 #pragma omp parallel for
-        for (int i = 0; i < buckets; i++)  {
-            int begin=position1[i];
+        for (int i = 0; i < buckets; i++) {
+            int begin = position1[i];
             int ending;
-            if(i!=buckets-1)
-                ending=position1[i+1]-1;
+            if (i != buckets - 1)
+                ending = position1[i + 1] - 1;
             else
-                ending=last;
-            Sort(begin,ending,choice1,level-1);
+                ending = last;
+            Sort(begin, ending, choice1, level - 1);
         }
     }
-    vector<Points<T>> map()
-    {
+
+    vector<Points<T>> map() {
         //cout<<lvls;
-        this->Sort(0,n-1,2,lvls);
+        Sort(0, n - 1, 1, lvls);
         print1();
-//        this->degree_count();
+        degree_count(1);
+        for (unsigned long i = 0; i < count.size()-1; i++) {
+            if(count[i].getY()>1) {
+                Sort(count[i].getZ(), count[i + 1].getZ() - 1, 2, lvls);
+            }
+        }
+        if(count[count.size()-1].getY()>1)
+            Sort(count[count.size()-1].getZ(), n - 1, 2, lvls);
+        print1();
         return arr;
     }
-    void transfer()
-    {
-        if(check())
-        {
-            cout<<endl<<"Sorted list is in arr."<<endl;
-        } else if(check1())
-        {
-            cout<<endl<<"Sorted list is in arr1."<<endl;
-            #pragma omp parallel for
+
+    void transfer() {
+        if (check()) {
+            cout << endl << "Sorted list is in arr." << endl;
+        } else if (check1()) {
+            cout << endl << "Sorted list is in arr1." << endl;
+#pragma omp parallel for
             for (int i = 0; i < arr1.size(); i++) {
-                arr[i]=arr1[i];
+                arr[i] = arr1[i];
             }
         }
     }
-    bool check()
-    {
-        for (int i = 0; i < arr.size()-1; i++) {
+
+    bool check() {
+        for (int i = 0; i < arr.size() - 1; i++) {
             if (arr[i] > arr[i + 1]) {
                 cout << "arr Sorted wrongly\n";
                 return false;
@@ -412,9 +405,9 @@ public:
         cout << "arr sorted correctly\n";
         return true;
     }
-    bool check1()
-    {
-        for (int i = 0; i < arr1.size()-1; i++) {
+
+    bool check1() {
+        for (int i = 0; i < arr1.size() - 1; i++) {
             if (arr1[i] > arr1[i + 1]) {
                 cout << "arr1 Sorted wrongly\n";
                 return false;
@@ -423,9 +416,56 @@ public:
         cout << "arr1 sorted correctly\n";
         return true;
     }
-    void degree_count()
-    {
-        return;
+
+    void degree_count(int choice) {
+        T x = arr[0].getX();
+        Points<T> temp(x, 0, 0);
+        count.push_back(temp);
+        unsigned long distinct_num_count = 1;
+        switch (choice) {
+            case 1:
+                for (unsigned long i = 0; i < n; i++) {
+                    if (arr[i].getX() != x) {
+                        x = arr[i].getX();
+                        Points<T> temp(x, 1, 0);
+                        count.push_back(temp);
+                        distinct_num_count++;
+                    } else
+                        count[distinct_num_count - 1].y++;
+                }
+                break;
+            case 2:
+                for (unsigned long i = 0; i < n; i++) {
+                    if (arr[i].getY() != x) {
+                        x = arr[i].getY();
+                        Points<T> temp(x, 1, 0);
+                        count.push_back(temp);
+                        distinct_num_count++;
+                    } else
+                        count[distinct_num_count - 1].y++;
+                }
+                break;
+            case 3:
+                for (unsigned long i = 0; i < n; i++) {
+                    if (arr[i].getZ() != x) {
+                        x = arr[i].getZ();
+                        Points<T> temp(x, 1, 0);
+                        count.push_back(temp);
+                        distinct_num_count++;
+                    } else
+                        count[distinct_num_count - 1].y++;
+                }
+                break;
+            default:
+                cout << "Invalid choice.\n";
+        }
+        for (unsigned long i = 1; i < distinct_num_count; i++) {
+            count[i].z = count[i-1].z + count[i-1].y;
+        }
+        for (unsigned long j = 0; j < distinct_num_count; j++) {
+            cout << "(" << count[j].getX() << "," << count[j].getY() << "," << count[j].getZ() << "),";
+        }
+        cout << endl;
     }
 };
 
