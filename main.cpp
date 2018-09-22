@@ -8,7 +8,7 @@
 using namespace std;
 int main() {
     unsigned int n;
-    int num,buck,x,y,z;
+    int num,buck,x,y,z,lvls;
     ifstream in;
     string line;
     cout<<"Enter the number of points:";
@@ -63,11 +63,26 @@ int main() {
 //            z=z|rand();
         inputarr[i]=Points<unsigned long>(x,y,z);
     }
+    lvls = (8 * 8) / buck + 1;
     omp_set_nested(1);
     RadixSort<unsigned long > *obj=new RadixSort<unsigned long>(&inputarr,n,num,buck);
 
     chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-    inputarr=obj->map();
+    obj->print1();
+    obj->Sort(0, n - 1, 1, lvls);
+    obj->print1();
+    vector<Points<unsigned long>> count = obj->degree_count(1);
+    for (unsigned long i = 0; i < count.size()-1; i++) {
+        if(count[i].getY()>1) {
+            obj->Sort(count[i].getZ(), count[i + 1].getZ() - 1, 2, lvls);
+        }
+    }
+    if(count[count.size()-1].getY()>1)
+        obj->Sort(count[count.size()-1].getZ(), n - 1, 2, lvls);
+    obj->print1();
+    
+    
+
     chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
     cout <<endl <<"The time taken is "<<duration <<" microseconds"<<endl;

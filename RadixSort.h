@@ -40,7 +40,7 @@ public:
         lvls = (sizeof(arr[0].getX()) * 8) / word_size + 1;
 //        print();
 //        cout<<endl;
-        print1();
+//        print1();
         /*cout<<"Enter Points";
         arr=new Points<T>[n];
         for (int i = 0; i < n; i++) {
@@ -367,22 +367,6 @@ public:
         }
     }
 
-    vector<Points<T>> map() {
-        //cout<<lvls;
-        Sort(0, n - 1, 1, lvls);
-        print1();
-        degree_count(1);
-        for (unsigned long i = 0; i < count.size()-1; i++) {
-            if(count[i].getY()>1) {
-                Sort(count[i].getZ(), count[i + 1].getZ() - 1, 2, lvls);
-            }
-        }
-        if(count[count.size()-1].getY()>1)
-            Sort(count[count.size()-1].getZ(), n - 1, 2, lvls);
-        print1();
-        return arr;
-    }
-
     void transfer() {
         if (check()) {
             cout << endl << "Sorted list is in arr." << endl;
@@ -417,7 +401,7 @@ public:
         return true;
     }
 
-    void degree_count(int choice) {
+    vector<Points<T>> degree_count(int choice) {
         T x = arr[0].getX();
         Points<T> temp(x, 0, 0);
         count.push_back(temp);
@@ -466,6 +450,7 @@ public:
             cout << "(" << count[j].getX() << "," << count[j].getY() << "," << count[j].getZ() << "),";
         }
         cout << endl;
+        return count;
     }
 };
 
