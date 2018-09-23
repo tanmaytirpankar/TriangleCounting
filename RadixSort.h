@@ -25,13 +25,12 @@ template <class T>
 class RadixSort {
     vector<Points<T>> arr, arr1;
     vector<Points<T>> count;
-    vector<T> num_count;
-    int num_threads;
-    unsigned int n;
+    unsigned long num_threads;
+    unsigned long n;
     int word_size;
     int lvls;
 public:
-    RadixSort(vector<Points<T>> *inparr, unsigned int n, int num, int word_size) {
+    RadixSort(vector<Points<T>> *inparr, unsigned long n, unsigned long num, int word_size) {
         this->n = n;
         this->num_threads = num;
         this->word_size = word_size;
@@ -53,9 +52,7 @@ public:
     void print() {
         for (int i = 0; i < n; i++) {
             int num_length = sizeof(arr[0].getX()) * 8;
-            T x = arr[i].getX();
-            T y = arr[i].getY();
-            T z = arr[i].getZ();
+            T x,y,z;
             cout << "(" << arr[i].getX() << "," << arr[i].getY() << "," << arr[i].getZ() << "),";
             for (int j = 0; j < num_length; j++) {
                 x = arr[i].getX();
@@ -80,27 +77,29 @@ public:
 
     void print1() {
         for (int i = 0; i < n; i++) {
-            cout << "(" << arr[i].getX() << "," << arr[i].getY() << "," << arr[i].getZ() << "),";
+            cout << "(" << arr[i].getX() << "," << arr[i].getY() << "," << arr[i].getZ() << "," << i <<"),";
         }
         cout << endl;
     }
 
     void Sort(unsigned long first, unsigned long last, int choice1, int level) {
         if (level == lvls) {
-            for (int i = first; i <= last; i++) {
+            for (unsigned long i = first; i <= last; i++) {
                 arr[i].choice = arr1[i].choice = choice1;
             }
         }
-        int num_elements = last - first + 1;
+        unsigned long num_elements = last - first + 1;
+
         if (num_elements <= 20 || level < 1) {
-            if (level % 2 == 1) {
+
+            if (level % 2 == 1 && num_elements > 0) {
                 sort(&arr1[first], &arr1[last + 1]);
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     arr[i] = arr1[i];
                 }
-            } else {
+            } else if(num_elements > 0){
                 sort(&arr[first], &arr[last + 1]);
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     arr1[i] = arr[i];
                 }
             }
@@ -108,18 +107,18 @@ public:
         }
         int buckets = int(pow(2, word_size));
         int choice = 0;
-        vector<vector<unsigned int>> count(num_threads);
-        vector<vector<unsigned int>> position(num_threads);
+        vector<vector<unsigned long>> count(num_threads);
+        vector<vector<unsigned long>> position(num_threads);
         for (int l = 0; l < num_threads; l++) {
-            count[l] = vector<unsigned int>(buckets);
-            position[l] = vector<unsigned int>(buckets);
+            count[l] = vector<unsigned long>(buckets);
+            position[l] = vector<unsigned long>(buckets);
         }
 //        if(num_elements<=1 || level<1)
 //        {
 //            return ;
 //        }
 
-        int position1[buckets];
+        unsigned long position1[buckets];
         //vector<T> temp(num_elements);
         chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 #pragma omp parallel
@@ -157,7 +156,7 @@ public:
         switch (choice) {
             case 1:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr1[i].getX();
                     if (level > 1)
@@ -168,7 +167,7 @@ public:
                 break;
             case 2:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr1[i].getY();
                     if (level > 1)
@@ -179,7 +178,7 @@ public:
                 break;
             case 3:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr1[i].getZ();
                     if (level > 1)
@@ -190,7 +189,7 @@ public:
                 break;
             case 4:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr[i].getX();
                     if (level > 1)
@@ -201,7 +200,7 @@ public:
                 break;
             case 5:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr[i].getY();
                     if (level > 1)
@@ -212,7 +211,7 @@ public:
                 break;
             case 6:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr[i].getZ();
                     if (level > 1)
@@ -230,13 +229,14 @@ public:
         duration = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 
         //cout<<"The time taken for calculating counts is "<<duration <<" microseconds"<<endl;
+//        if(level > 0){
 //        cout<<"Values in count:"<<endl;
 //        for(int i = 0; i < num_threads; i++){
 //            for(int j = 0; j < buckets; j++){
 //                cout<<count[i][j]<<" ";
 //            }
 //            cout<<endl;
-//        }
+//        }}
         t1 = chrono::high_resolution_clock::now();
 //        position1[0]=position[0][0]=first;
 //        int prev_buc=0;
@@ -262,6 +262,7 @@ public:
                 position1[buc + 1] = position[0][buc + 1] =
                         position[num_threads - 1][buc] + count[num_threads - 1][buc];
         }
+//        if(level > 0){
 //        cout<<"Positions in position at depth "<<level<<" is:"<<endl;
 //        for(int i = 0; i < num_threads; i++){
 //            for(int j = 0; j < buckets; j++){
@@ -269,11 +270,15 @@ public:
 //            }
 //            cout<<endl;
 //        }
+//            for (int k = 0; k < buckets; ++k) {
+//                cout<<position1[k]<<" ";
+//            }
+//            cout<<endl;}
 
         switch (choice) {
             case 1:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr1[i].getX();
                     if (level > 1)
@@ -285,7 +290,7 @@ public:
                 break;
             case 2:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr1[i].getY();
                     if (level > 1)
@@ -297,7 +302,7 @@ public:
                 break;
             case 3:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr1[i].getZ();
                     if (level > 1)
@@ -309,7 +314,7 @@ public:
                 break;
             case 4:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr[i].getX();
                     if (level > 1)
@@ -321,7 +326,7 @@ public:
                 break;
             case 5:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr[i].getY();
                     if (level > 1)
@@ -333,7 +338,7 @@ public:
                 break;
             case 6:
 #pragma omp parallel for
-                for (int i = first; i <= last; i++) {
+                for (unsigned long i = first; i <= last; i++) {
                     T x;
                     x = arr[i].getZ();
                     if (level > 1)
@@ -356,9 +361,9 @@ public:
         //cout<<"Recursion number "<<level<<endl;
         //print();
 #pragma omp parallel for
-        for (int i = 0; i < buckets; i++) {
-            int begin = position1[i];
-            int ending;
+        for (unsigned long i = 0; i < buckets; i++) {
+            unsigned long begin = position1[i];
+            unsigned long ending;
             if (i != buckets - 1)
                 ending = position1[i + 1] - 1;
             else
@@ -383,6 +388,7 @@ public:
         for (int i = 0; i < arr.size() - 1; i++) {
             if (arr[i] > arr[i + 1]) {
                 cout << "arr Sorted wrongly\n";
+                cout << i<<endl;
                 return false;
             }
         }
@@ -394,6 +400,7 @@ public:
         for (int i = 0; i < arr1.size() - 1; i++) {
             if (arr1[i] > arr1[i + 1]) {
                 cout << "arr1 Sorted wrongly\n";
+                cout << i << endl;
                 return false;
             }
         }
@@ -451,6 +458,24 @@ public:
         }
         cout << endl;
         return count;
+    }
+    vector<Points<T>> getArr()
+    {
+        return arr;
+    }
+    void newmap(vector<Points<T>> orderedCount)
+    {
+        unsigned long k=0;
+        unsigned long x = arr[0].getX();
+        for (int i = 0; i < n; i++) {
+            if(arr[i].getX() == x){
+                arr[i].setX(orderedCount[k].getX());
+            } else{
+                k++;
+                x = arr[i].getX();
+                arr[i].setX(orderedCount[k].getX());
+            }
+        }
     }
 };
 

@@ -27,6 +27,10 @@ public:
         this->y=y;
         this->z=z;
     }
+    void setX(T val)
+    {
+        x = val;
+    }
     T getX()
     {
         return x;
