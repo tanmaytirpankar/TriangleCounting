@@ -12,9 +12,9 @@ int main() {
     unsigned long x,y,z;
     ifstream in;
     string line;
-    cout<<"Enter the number of points:";
-    cin>>n;
-    cout<<"Number of points "<<n<<endl;
+//    cout<<"Enter the number of points:";
+//    cin>>n;
+//    cout<<"Number of points "<<n<<endl;
     cout<<"Enter the number of threads:";
     cin>>num;
     cout<<"Enter the size of bucketing number";
@@ -38,17 +38,32 @@ int main() {
     in.open(filename);
     if(in.is_open())
     {}
-    else
-        cout<<"File couldn't be opened."<<endl;
-    for (int i = 0; i < n; i++) {
-        getline( in, line,'\t');
+    else {
+        cout << "File couldn't be opened." << endl;
+        return 0;
+    }
+//    for (int i = 0; i < n; i++) {
+//        getline( in, line,'\t');
+//        x=strtoul(line.c_str(), nullptr,0);
+//        getline( in, line,'\t');
+//        y=strtoul(line.c_str(), nullptr,0);
+//        getline( in, line,'\n');
+//        z=strtoul(line.c_str(), nullptr,0);
+//        inputarr[i]=Points<unsigned long>(x,y,z);
+//    }
+    getline( in, line,'\t');
+    while(!in.eof()) {
         x=strtoul(line.c_str(), nullptr,0);
         getline( in, line,'\t');
         y=strtoul(line.c_str(), nullptr,0);
         getline( in, line,'\n');
         z=strtoul(line.c_str(), nullptr,0);
-        inputarr[i]=Points<unsigned long>(x,y,z);
+        Points<unsigned long> temp(x,y,z);
+        inputarr.push_back(temp);
+        n++;
+        getline( in, line,'\t');
     }
+    cout<<"Number of points "<<n<<endl;
     in.close();
 //    srand(2);
 //#pragma omp parallel for
@@ -69,9 +84,9 @@ int main() {
     RadixSort<unsigned long > obj=RadixSort<unsigned long>(&inputarr,n,num,buck);
 
     chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-    obj.print1();
+//    obj.print1();
     obj.Sort(0, n - 1, 1, lvls);
-    obj.print1();
+//    obj.print1();
     vector<Points<unsigned long>> count = obj.degree_count(1);
     for (unsigned long i = 0; i < count.size()-1; i++) {
         if(count[i].getY()>1) {
@@ -80,13 +95,13 @@ int main() {
     }
     if(count[count.size()-1].getY()>1)
         obj.Sort(count[count.size()-1].getZ(), n - 1, 2, lvls);
-    obj.print1();
+//    obj.print1();
     RadixSort<unsigned long > obj1=RadixSort<unsigned long>(&count,count.size(),num,buck);
     cout<<"Count:"<< lvls<<","<<count.size()<<endl;
     obj1.Sort(0,count.size()-1,2,lvls);
-    obj1.print1();
+//    obj1.print1();
     obj.newmap(obj1.getArr());
-    obj.print1();
+//    obj.print1();
     
 
     chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
