@@ -13,19 +13,16 @@ template <class T>
 class Points{
 
 public:
-    T x,y,z;
-    int choice;
+    T x,y;
     Points()
     {
         this->x=0;
         this->y=0;
-        this->z=0;
     }
-    Points(T x,T y, T z)
+    Points(T x,T y)
     {
         this->x=x;
         this->y=y;
-        this->z=z;
     }
     void setX(T val)
     {
@@ -39,31 +36,17 @@ public:
     {
         return y;
     }
-    T getZ()
-    {
-        return z;
-    }
     bool operator <(Points<T> p2)
     {
-        if(choice == 1) {
-            if (x < p2.x)
-                return true;
-            else
-                return false;
-        }
-        else if(choice == 2) {
-            if (y < p2.y)
-                return true;
-            else
-                return false;
-        }
-        else if(choice == 3) {
-            if (z < p2.z)
-                return true;
-            else
-                return false;
-        }
-    }
+        if (x < p2.x)
+            return true;
+        else if(x > p2.x)
+            return false;
+        else if(y < p2.y)
+            return true;
+        else
+            return false;
+    }//(5,7),(2,9),(9,3),(7,9),(4,3),(7,0)
     bool operator >(Points<T> p2)
     {
 //        if(choice == 1){
@@ -74,12 +57,6 @@ public:
 //        }
 //        else if(choice == 2){
 //            if(y>p2.y)
-//                return true;
-//            else
-//                return false;
-//        }
-//        else if(choice == 3){
-//            if(z>p2.z)
 //                return true;
 //            else
 //                return false;
