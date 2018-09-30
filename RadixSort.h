@@ -24,7 +24,6 @@ using namespace std;
 template <class T>
 class RadixSort {
     vector<Points<T>> arr, arr1;
-    vector<Points<T>> count;
     unsigned int num_threads, word_size;
     unsigned long n;
     int lvls;
@@ -372,14 +371,10 @@ public:
     }
 
     void transfer() {
-        if (check()) {
-            cout << endl << "Sorted list is in arr." << endl;
-        } else if (check1()) {
-            cout << endl << "Sorted list is in arr1." << endl;
 #pragma omp parallel for
-            for (unsigned long i = 0; i < arr1.size(); i++) {
-                arr[i] = arr1[i];
-            }
+        for (int i = 0; i < n; i++) {
+            arr1[i].x = arr[i].x;
+            arr1[i].y = arr[i].y;
         }
     }
 
@@ -409,6 +404,7 @@ public:
 
     vector<Points<T>> degree_count() {
         T x = arr[0].getX();
+        vector<Points<T>> count;
         Points<T> temp(0, x);
         count.push_back(temp);
         unsigned long distinct_num_count = 1;
@@ -435,7 +431,7 @@ public:
     void newmap(vector<Points<T>> orderedCount)
     {
         unsigned long k=0;
-        unsigned long x = arr[0].getX();
+        T x = arr[0].getX();
         for (int i = 0; i < n; i++) {
             if(arr[i].getX() == x){
                 arr[i].setX(orderedCount[k].getY());
@@ -445,6 +441,50 @@ public:
                 arr[i].setX(orderedCount[k].getY());
             }
         }
+    }
+    void swap()
+    {
+        T temp;
+        for (int i = 0; i < n; i++) {
+            temp = arr[i].getX();
+            arr[i].x = arr1[i].x = arr[i].y;
+            arr[i].y = arr1[i].y = temp;
+        }
+    }
+    void writeToFile(int filecount)
+    {
+        ofstream fs;
+        string filename1 = "Output";
+        filename1.append(to_string(filecount));
+        filename1.append(".tsv");
+        fs.open(filename1);
+        for (int counter = 0; counter <  n; counter++)
+        {
+            fs << arr[counter].x << "\t" << arr[counter].y<< endl;
+        }
+        fs.close();
+    }
+    T symmetrycheck()
+    {
+        bool flag[n];
+        unsigned long i;
+        for (i = 0; i < n; i++) {
+            flag[i] = false;
+        }
+        for (unsigned long j = 0; j < n; j++) {
+            if (flag[j] == false) {
+                for (i = j; i < n; i++) {
+                    if (arr[i].x == arr[j].y && arr[i].y == arr[j].x) {
+                        flag[i] = true;
+                        break;
+                    }
+                }
+                if (i == n) {
+                    return j;
+                }
+            }
+        }
+        return -1;
     }
 };
 
